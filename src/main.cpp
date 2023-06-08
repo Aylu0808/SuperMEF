@@ -21,17 +21,12 @@ LiquidCrystal_I2C lcd(0x3F, 16, 2);
 volatile int t = 0;
 volatile int tlcd = 0;
 
-volatile int retencionIncremento = 0;
-volatile int retencionInicio = 0;
-volatile int estadoLcd = 0;
-volatile int estadoInfras = 0;
 
-volatile bool flagRetencionIncremento = FALSE;
-volatile bool flagPulsoIncremento = FALSE;
-volatile bool flagRetencionInicio = FALSE;
-volatile bool flagPulsoInicio = FALSE;
-volatile bool flagRetencionInfras = FALSE;
-volatile bool flagPulsoInfras = FALSE;
+volatile int estadoLcd = 0;
+volatile int estados[] = {0,0,0}; //Incremento, inicio, infras, lcd
+
+volatile bool flagRetencion[] = {FALSE, FALSE, FALSE}; //Incremento, inicio, infras
+volatile bool flagPulso[] = {FALSE, FALSE, FALSE}; //Incremento, inicio, infras
 
 volatile int numViajes = 0;
 volatile int contadorViajes = 0;
@@ -40,95 +35,82 @@ void contando();
 void cantViajes();
 void infras();
 
-/// RETENCION DE PULSADOR INCREMENTO ///////////////////////////////
-void state1Incremento(){
-  flagPulsoIncremento = FALSE;
+/// RETENCION DE PULSADORES  //////////////////////////////////////
+void state1(){
+  flagPulso[0] = FALSE; //Incremento
+  flagPulso[1] = FALSE; //Inicio
+  flagPulso[2] = FALSE; //Infras
 
   if(digitalRead(incremento) == HIGH)
-    retencionIncremento = 1;
+    estados[0] = 1;
+  if(digitalRead(inicio) == HIGH)
+    estados[1] = 1;
+  if(digitalRead(infra) == HIGH)
+    estados[2] = 1;
 
   if(digitalRead(incremento) == LOW){
     t = 0;
-    retencionIncremento = 2;
+    estados[0] = 2;
   }
-}
-void state2Incremento(){
-  if(flagRetencionIncremento == FALSE)
-    retencionIncremento = 2;
-  if(flagRetencionIncremento == TRUE)
-    retencionIncremento = 3;
-}
-void state3Incremento(){
-  if(digitalRead(incremento) == LOW){ //EN EL CODIGO ANTERIOR ESTO NO FUNCIONABA ASI (FUNCIONO SIN EL IF Y EL ELSE)
-    flagPulsoIncremento = TRUE;
-    retencionIncremento = 1;
-  }
-  else{
-    flagPulsoIncremento = FALSE;
-    retencionIncremento = 1;
-  }
-}
-/// RETENCION DE PULSADOR INICIO /////////////////////////////////
-void state1Inicio(){
-  flagPulsoInicio = FALSE;
-
-  if(digitalRead(inicio) == HIGH)
-    retencionInicio = 1;
-
   if(digitalRead(inicio) == LOW){
     t = 0;
-    retencionInicio = 2;
+    estados[1] = 2;
   }
-}
-void state2Inicio(){
-  if(flagRetencionInicio == FALSE)
-    retencionInicio = 2;
-  if(flagRetencionInicio == TRUE)
-    retencionInicio = 3;
-}
-void state3Inicio(){
-  if(digitalRead(inicio) == LOW){ //EN EL CODIGO ANTERIOR ESTO NO FUNCIONABA ASI (FUNCIONO SIN EL IF Y EL ELSE)
-    flagPulsoInicio = TRUE;
-    retencionInicio = 1;
-  }
-  else{
-    flagPulsoInicio = FALSE;
-    retencionInicio = 1;
-  }
-}
-/// RETENCION DE PULSADOR INFRA /////////////////////////////////
-void state1Infra(){
-  flagPulsoInfras = FALSE;
-
-  if(digitalRead(infra) == HIGH)
-    estadoInfras = 1;
-
   if(digitalRead(infra) == LOW){
     t = 0;
-    estadoInfras = 2;
+    estados[2] = 2;
   }
 }
-void state2Infra(){
-  if(flagRetencionInfras == FALSE)
-    estadoInfras = 2;
-  if(flagRetencionInfras == TRUE)
-    estadoInfras = 3;
+void state2(){
+  if(flagRetencion[0] == FALSE)
+    estados[0] = 2;
+  if(flagRetencion[0] == TRUE)
+    estados[0] = 3;
+
+  if(flagRetencion[1] == FALSE)
+    estados[1] = 2;
+  if(flagRetencion[1] == TRUE)
+    estados[1] = 3;
+
+  if(flagRetencion[2] == FALSE)
+    estados[2] = 2;
+  if(flagRetencion[2] == TRUE)
+    estados[2] = 3;
 }
-void state3Infra(){
-  if(digitalRead(infra) == LOW){ //EN EL CODIGO ANTERIOR ESTO NO FUNCIONABA ASI (FUNCIONO SIN EL IF Y EL ELSE)
-    flagPulsoInfras = TRUE;
-    estadoInfras = 1;
+void state3(){
+  if(digitalRead(incremento) == LOW){ //EN EL CODIGO ANTERIOR ESTO NO FUNCIONABA ASI (FUNCIONO SIN EL IF Y EL ELSE)
+    flagPulso[0] = TRUE;
+    estados[0] = 1;
   }
   else{
-    flagPulsoInicio = FALSE;
-    estadoInfras = 1;
+    flagPulso[0] = FALSE;
+    estados[0] = 1;
+  }
+
+  if(digitalRead(inicio) == LOW){ //EN EL CODIGO ANTERIOR ESTO NO FUNCIONABA ASI (FUNCIONO SIN EL IF Y EL ELSE)
+    flagPulso[1] = TRUE;
+    estados[1] = 1;
+  }
+  else{
+    flagPulso[1] = FALSE;
+    estados[1] = 1;
+  }
+
+  if(digitalRead(infras) == LOW){ //EN EL CODIGO ANTERIOR ESTO NO FUNCIONABA ASI (FUNCIONO SIN EL IF Y EL ELSE)
+    flagPulso[2] = TRUE;
+    estados[2] = 1;
+  }
+  else{
+    flagPulso[2] = FALSE;
+    estados[2] = 1;
   }
 }
+
 /////// CONDICIONES DE LCD ///////////////////////////////////////////
 void lcd1(){
   if(digitalRead(inicio) == HIGH){
-    retencionInicio = 1;
-    if(flagPulsoInicio == FALSE)
+    estados[1] = 1;
+    if(flagPulso[1] == FALSE)
       estadoLcd = 1;
   }
   else{
@@ -208,20 +190,20 @@ void loop(){
   if(aceptacion == 0)
     cantViajes();
 
-  switch(retencionIncremento){
-    case 1: state1Incremento(); break;
-    case 2: state2Incremento(); break;
-    case 3: state3Incremento(); break;
+  switch(estados[0]){ //Incremento
+    case 1: state1(); break;
+    case 2: state2(); break;
+    case 3: state3(); break;
   }
-  switch(retencionInicio){
-    case 1: state1Inicio(); break;
-    case 2: state2Inicio(); break;
-    case 3: state3Inicio(); break;
+  switch(estados[1]){ //Inicio
+    case 1: state1(); break;
+    case 2: state2(); break;
+    case 3: state3(); break;
   }
-  switch(estadoInfras){
-    case 1: state1Infras(); break;
-    case 2: state2Infras(); break;
-    case 3: state3Infras(); break;
+  switch(estados[2]){ //Infras
+    case 1: state1(); break;
+    case 2: state2(); break;
+    case 3: state3(); break;
   }
 
   switch(estadoLcd){
@@ -240,40 +222,40 @@ void contando(){
   t++;
   tlcd++;
   
-  if(retencionIncremento == 2){
+  if(esatados[0] == 2){
     if(t >= 300)
-      flagRetencionIncremento = TRUE;
+      flagRetencion[0] = TRUE;
     else
-      flagRetencionIncremento = FALSE;
+      flagRetencion[0] = FALSE;
   }
-  if(retencionInicio == 2){
+  if(esatados[1] == 2){
     if(t >= 300)
-      flagRetencionInicio = TRUE;
+      flagRetencion[1] = TRUE;
     else
-      flagRetencionInicio = FALSE;
+      flagRetencion[1] = FALSE;
   }
-  if(estadoInfras == 2){
+  if(esatados[2] == 2){
     if(t >= 300)
-      flagRetencionInfras = TRUE;
+      flagRetencion[2] = TRUE;
     else
-      flagRetencionInfras = FALSE;
+      flagRetencion[2] = FALSE;
   }
 }
 void cantViajes(){
   estadoLcd = 1;
-  retencionIncremento = 1;
-  retencionInicio = 1;
+  estados[0] = 1;
+  estados[1] = 1;
 
-  if(flagPulsoIncremento == TRUE)
+  if(flagPulso[0] == TRUE)
     numViajes++;
-  if(flagPulsoInicio == TRUE){
+  if(flagPulso[1] == TRUE){
     estadoLcd = 2;
     aceptacion = 1;
   }
 }
 void infras{
-  estadoInfras = 1;
+  estados[2] = 1;
 
-  if(flagPulsoInfras == TRUE)
+  if(flagPulso[2] == TRUE)
     contadorViajes++;  
 }
