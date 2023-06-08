@@ -7,6 +7,7 @@
   En este caso se esta implementando con un pulsador que incrementa una variable y la muestra en un lcd
   Este codigo esta probado y funciona
   A este codigo le falta correccion de un profesor
+  cambio 7:38
 */
 #define FALSE 0
 #define TRUE 1
