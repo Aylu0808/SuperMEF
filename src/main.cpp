@@ -7,14 +7,15 @@
   En este caso se esta implementando con un pulsador que incrementa una variable y la muestra en un lcd
   Este codigo esta probado y funciona
   A este codigo le falta correccion de un profesor
-  cambio 7:38
+
+  Este codigo esta implementado de forma parecida en MEF incremento inicio lcd
 */
 #define FALSE 0
 #define TRUE 1
 
 #define incremento 10
 #define inicio 12
-#define infra //no se en que pin hay algo declarado
+#define infra 4
 
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
 
@@ -23,7 +24,7 @@ volatile int tlcd = 0;
 
 
 volatile int estadoLcd = 0;
-volatile int estados[] = {0,0,0}; //Incremento, inicio, infras, lcd
+volatile int estados[] = {0,0,0}; //Incremento, inicio, infras
 
 volatile bool flagRetencion[] = {FALSE, FALSE, FALSE}; //Incremento, inicio, infras
 volatile bool flagPulso[] = {FALSE, FALSE, FALSE}; //Incremento, inicio, infras
